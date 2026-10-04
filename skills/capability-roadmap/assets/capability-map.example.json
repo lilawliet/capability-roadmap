@@ -1,0 +1,400 @@
+{
+  "schemaVersion": 1,
+  "project": {
+    "name": "虚构会议室预约系统（教学示例，非真实评估）",
+    "example": true
+  },
+  "review": {
+    "mode": "initial",
+    "from": null,
+    "to": "example-only",
+    "date": "2026-01-01",
+    "scope": "演示三层能力、证据与小版本引用；没有检查真实仓库",
+    "reviewedCapabilityIds": [
+      "PB01.01",
+      "PD01.01",
+      "PT01.01"
+    ],
+    "excluded": [
+      "全部运行、部署和业务验收；示例代码路径不存在于真实项目"
+    ]
+  },
+  "sources": [
+    {
+      "id": "S-brief",
+      "kind": "requirement",
+      "locator": "example:需求说明",
+      "revision": "示例版本1",
+      "summary": "假设用户需要选择会议室和空闲时段，提交后刷新仍可查看自己的预约；同一时段不能重复占用。"
+    },
+    {
+      "id": "S-confirm",
+      "kind": "decision",
+      "locator": "example:范围确认",
+      "revision": "示例版本1",
+      "summary": "假设确认首期为免费内部预约；不包括支付、自动审批或外部日历。"
+    },
+    {
+      "id": "S-prototype",
+      "kind": "prototype",
+      "locator": "example:预约页面原型",
+      "revision": "示例版本1",
+      "summary": "原型包含改期入口，改期截止时间及冲突处理尚待确认。"
+    },
+    {
+      "id": "S-ui-code",
+      "kind": "code",
+      "locator": "example:src/booking.ts:createBooking",
+      "path": "src/booking.ts",
+      "revision": "example-only",
+      "summary": "假设源码只将新预约写入本地内存列表，未接通数据库和身份校验。"
+    },
+    {
+      "id": "S-domain-scan",
+      "kind": "inspection",
+      "locator": "example:对预约调用链和数据模型的限定检索",
+      "revision": "example-only",
+      "summary": "假设在已查范围未发现占用约束或本人预约授权检查，不推广为未查子系统的结论。"
+    },
+    {
+      "id": "S-store-code",
+      "kind": "code",
+      "locator": "example:src/database.ts:connect",
+      "path": "src/database.ts",
+      "revision": "example-only",
+      "summary": "假设数据库连接和预约表可复用，提交路径尚未调用事务写入。"
+    }
+  ],
+  "decisions": [
+    {
+      "id": "Q-scope",
+      "question": "首期是否只支持免费内部预约？",
+      "state": "confirmed",
+      "answer": "教学假设：确认免费内部预约，收费与外部日历均未纳入。",
+      "sourceIds": [
+        "S-confirm"
+      ]
+    },
+    {
+      "id": "Q-reschedule",
+      "question": "允许何时改期，冲突时保留哪个时段？",
+      "state": "open",
+      "answer": null,
+      "sourceIds": [
+        "S-prototype"
+      ]
+    },
+    {
+      "id": "Q-calendar",
+      "question": "后续是否需要外部日历，如何取得用户连接许可？",
+      "state": "open",
+      "answer": null,
+      "sourceIds": [
+        "S-confirm"
+      ]
+    }
+  ],
+  "capabilities": [
+    {
+      "id": "PB01.01",
+      "layer": "PB",
+      "group": "预约办理",
+      "title": "用户创建与管理预约",
+      "requires": [
+        "PD01.01",
+        "PT01.01"
+      ],
+      "phaseId": "P0",
+      "functions": [
+        {
+          "id": "PB01.01.01",
+          "title": "提交并回查本人预约",
+          "requirementState": "confirmed",
+          "sourceIds": [
+            "S-brief",
+            "S-confirm"
+          ],
+          "decisionIds": [
+            "Q-scope"
+          ],
+          "acceptance": [
+            "提交后刷新仍可回查本人预约",
+            "冲突时明确拒绝且不出现虚假成功",
+            "其他用户不能读取本人私有预约"
+          ]
+        },
+        {
+          "id": "PB01.01.02",
+          "title": "修改预约时段",
+          "requirementState": "open",
+          "sourceIds": [
+            "S-prototype"
+          ],
+          "decisionIds": [
+            "Q-reschedule"
+          ],
+          "acceptance": []
+        },
+        {
+          "id": "PB01.01.03",
+          "title": "同步外部日历",
+          "requirementState": "proposed",
+          "sourceIds": [
+            "S-confirm"
+          ],
+          "decisionIds": [
+            "Q-calendar"
+          ],
+          "acceptance": []
+        }
+      ],
+      "assessment": {
+        "implementation": "partial",
+        "validation": "not_run",
+        "deployment": "unknown",
+        "acceptance": "not_run",
+        "present": [
+          "有创建表单和内存列表（教学假设）"
+        ],
+        "gaps": [
+          "接通持久化、本人身份及冲突反馈",
+          "改期规则和外部日历范围未确认",
+          "尚无实际测试、部署或验收证据"
+        ],
+        "evidenceIds": [
+          "S-ui-code"
+        ],
+        "reviewedAt": "2026-01-01",
+        "codeRef": "example-only",
+        "freshness": "current"
+      }
+    },
+    {
+      "id": "PD01.01",
+      "layer": "PD",
+      "group": "预约领域规则",
+      "title": "时段占用与访问归属",
+      "requires": [
+        "PT01.01"
+      ],
+      "phaseId": "P0",
+      "functions": [
+        {
+          "id": "PD01.01.01",
+          "title": "以身份和占用不变量约束预约",
+          "requirementState": "confirmed",
+          "sourceIds": [
+            "S-brief",
+            "S-confirm"
+          ],
+          "decisionIds": [
+            "Q-scope"
+          ],
+          "acceptance": [
+            "同一会议室重叠占用按确认规则拒绝",
+            "读取和修改服务端核验本人归属",
+            "失败写入不留下有效占用"
+          ]
+        }
+      ],
+      "assessment": {
+        "implementation": "not_implemented",
+        "validation": "not_run",
+        "deployment": "unknown",
+        "acceptance": "not_run",
+        "present": [],
+        "gaps": [
+          "限定检索范围未见占用和归属执行逻辑（教学假设）",
+          "需设计并验证拒绝路径和并发边界"
+        ],
+        "evidenceIds": [
+          "S-domain-scan"
+        ],
+        "reviewedAt": "2026-01-01",
+        "codeRef": "example-only",
+        "freshness": "current"
+      }
+    },
+    {
+      "id": "PT01.01",
+      "layer": "PT",
+      "group": "数据执行能力",
+      "title": "身份上下文与事务写入",
+      "requires": [],
+      "phaseId": "P0",
+      "functions": [
+        {
+          "id": "PT01.01.01",
+          "title": "可靠写入预约并返回可核对结果",
+          "requirementState": "confirmed",
+          "sourceIds": [
+            "S-brief"
+          ],
+          "decisionIds": [],
+          "acceptance": [
+            "数据库事务或等价机制维持占用不变量",
+            "并发重复提交不重复创建",
+            "失败返回不被前端显示为成功"
+          ]
+        }
+      ],
+      "assessment": {
+        "implementation": "reusable",
+        "validation": "not_run",
+        "deployment": "unknown",
+        "acceptance": "not_run",
+        "present": [
+          "已有数据库连接和预约表（教学假设）"
+        ],
+        "gaps": [
+          "写接口接通身份和事务",
+          "数据库约束及并发测试缺失"
+        ],
+        "evidenceIds": [
+          "S-store-code"
+        ],
+        "reviewedAt": "2026-01-01",
+        "codeRef": "example-only",
+        "freshness": "current"
+      }
+    }
+  ],
+  "phases": [
+    {
+      "id": "P0",
+      "title": "内部预约试点",
+      "goal": "可可靠完成一次免费预约",
+      "exitCriteria": [
+        "约定的免费预约成功与失败路径通过验收",
+        "回查结果与数据库事实一致"
+      ]
+    },
+    {
+      "id": "P1",
+      "title": "预约管理完善",
+      "goal": "在真实使用反馈上完善改期与管理",
+      "exitCriteria": [
+        "改期规则已确认并通过关键异常验收"
+      ]
+    }
+  ],
+  "releases": [
+    {
+      "id": "R01",
+      "title": "可持久化的本人预约",
+      "phaseId": "P0",
+      "state": "planned",
+      "outcome": "用户选择空闲时段预约，刷新后可以看到有效结果，冲突提交明确失败",
+      "dependsOn": [],
+      "deliveries": [
+        {
+          "featureId": "PB01.01.01",
+          "mode": "complete",
+          "scope": "复用已有表单，接通持久化查询与真实错误反馈",
+          "acceptance": [
+            "刷新和重新登录仍能回查本人预约"
+          ]
+        },
+        {
+          "featureId": "PD01.01.01",
+          "mode": "complete",
+          "scope": "落实本人访问和占用不变量",
+          "acceptance": [
+            "两个用户争用同一时段不出现两条有效预约"
+          ]
+        },
+        {
+          "featureId": "PT01.01.01",
+          "mode": "complete",
+          "scope": "复用数据库基础，接通服务端事务及必要验证",
+          "acceptance": [
+            "失败写入不会产生成功响应或有效占用"
+          ]
+        }
+      ],
+      "entryCriteria": [
+        "首期免费预约范围确认",
+        "预约数据的隔离和冲突规则可验收"
+      ],
+      "acceptance": [
+        "两用户、并发冲突、刷新回查及失败反馈均通过",
+        "记录对应代码、数据约束和检查结果"
+      ],
+      "outOfScope": [
+        "收费",
+        "外部日历",
+        "未确认的改期规则"
+      ],
+      "remainingWork": [
+        "接通写入和查询",
+        "落实归属与冲突约束",
+        "完成异常/并发验证及部署演练"
+      ],
+      "measure": [
+        "统计真实预约提交与成功回查，口径和观察窗口上线前确认"
+      ],
+      "rollout": [
+        "先在隔离测试数据上验收，按授权发布；记录代码与迁移版本"
+      ],
+      "rollback": [
+        "核对旧代码兼容性，保留已创建预约；数据库恢复须单独评估新增数据影响"
+      ],
+      "estimate": null
+    },
+    {
+      "id": "R02",
+      "title": "预约改期候选",
+      "phaseId": "P1",
+      "state": "candidate",
+      "outcome": "在确认规则内修改预约时段并得到一致结果",
+      "dependsOn": [
+        "R01"
+      ],
+      "deliveries": [
+        {
+          "featureId": "PB01.01.02",
+          "mode": "complete",
+          "scope": "候选范围，规则确认后才能承诺交付",
+          "acceptance": [
+            "改期边界确认后补齐可执行用例"
+          ]
+        },
+        {
+          "featureId": "PT01.01.01",
+          "mode": "reuse",
+          "scope": "验证现有事务能力对改期失败恢复是否适用",
+          "acceptance": [
+            "不得因改期失败丢失原有有效预约"
+          ]
+        }
+      ],
+      "entryCriteria": [
+        "Q-reschedule 已确认",
+        "复用 R01 通过验收的写入基础"
+      ],
+      "acceptance": [
+        "按最终确认规则验证成功、冲突与失败保留"
+      ],
+      "outOfScope": [
+        "外部日历"
+      ],
+      "remainingWork": [
+        "确认业务规则",
+        "评估并补齐改期的数据变更与恢复"
+      ],
+      "measure": [
+        "采集已确认口径的改期成功和失败原因"
+      ],
+      "rollout": [
+        "待范围确认后安排，不承诺日期"
+      ],
+      "rollback": [
+        "保留预约事实；按最终数据变更制定回退"
+      ],
+      "estimate": null
+    }
+  ],
+  "backlog": [
+    "PB01.01.03"
+  ]
+}

@@ -1,0 +1,4 @@
+interface:
+  display_name: "系统能力分析与迭代规划"
+  short_description: "结合需求与代码证据，建立三层能力进度树、发布路线图和持续维护流程"
+  default_prompt: "使用 $capability-roadmap 结合项目需求与代码现状，建立或更新三层能力进度树，并按可验收的小版本规划发布路线图。"
